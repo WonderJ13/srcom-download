@@ -3,13 +3,19 @@ import json
 import os
 import requests
 import sys
+import time
 
 API_URI = "https://www.speedrun.com/api/v1/"
 
 def get_json(uri):
     print("GET from {}".format(uri))
     response = requests.get(uri)
-    response.raise_for_status()
+
+    #Check for rate limits
+    if response.status_code == 420:
+        time.sleep(60)
+        response = requests.get(uri)
+
     return json.loads(response.text)
 
 def get_game_list_from_name(name):
