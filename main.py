@@ -1,6 +1,8 @@
+import argparse
 import json
 import os
 import requests
+import sys
 
 API_URI = "https://www.speedrun.com/api/v1/"
 
@@ -32,7 +34,7 @@ def pick_game_from_name(name):
     games = get_game_list_from_name(name)
     if len(games) == 0:
         print("Game {} not found".format(name))
-        os.exit(1)
+        sys.exit(1)
     elif len(games) == 1:
         return games[0]['id']
     else:
@@ -117,6 +119,23 @@ def save_game_dict_to_disk(game_dict):
             run_file = open("{}/{}.json".format(cat_id_path, run_id), 'w')
             run_file.write(json.dumps(run))
             run_file.close()
+def main():
+    parser = argparse.ArgumentParser(description="Download game, category, and run data from speedrun.com", epilog="JSON blobs are saved in a new \"games\" subdirectory. Game and Category subfolders are named based on their speedrun.com assigned id, as well as the run files themselves. Game and Category JSON blobs are named \"game.json\" in their game's subfolder and \"category.json\" in their category's subfolder respectively.")
+    parser.add_argument("--name", type=str,
+                        help="search the game by name (may prompt user if more than 1 game is returned by speedrun.com")
+    parser.add_argument("--id", type=str,
+                        help="search the game by its id (overrides --name)")
+    args = parser.parse_args()
 
-game_dict = generate_game_dict_from_game_name("140")
-save_game_dict_to_disk(game_dict)
+    game_dict = None
+    if not args.id:
+        if not args.name:
+            parser.print_help()
+        else:
+            game_dict = generate_game_dict_from_game_name(args.name)
+    else:
+        game_dict = generate_game_dict_from_id(args.id)
+    save_game_dict_to_disk(game_dict)
+
+if __name__ == "__main__":
+    main()
